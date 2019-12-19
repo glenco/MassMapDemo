@@ -23,22 +23,54 @@ int main(int arg,char **argv){
   std::cout << "using parameter file: " << paramfile << std::endl;
   
   // read parameter file
-  InputParams params(paramfile);
+  //InputParams params(paramfile);
 
   long seed = -1827674;
-
-  /********************
-   construct lens:
-   mass maps will be read in during this construction
-   *******************/
-  Lens lens(params,&seed);
+  COSMOLOGY cosmo(Planck18);
   std::cout << "Lens constructed" << std::endl;
   
   //double center[] = {0.3*pi/180,-0.25*pi/180};
   double center[] = {0,0};  // center of grids
-  double range = 0.3*pi/180; // range of grids in radians
+  double range = 0.3*PI/180; // range of grids in radians
   size_t Ninit = 1024; // the initial number of pixels to a side in the grid
+  double zsource = 2,zlens = 0.5;
   
+  /********************
+   construct lens:
+   *******************/
+
+  // make an empty Lens
+  Lens lens(&seed,zsource,cosmo);
+  {
+    // make a mass map LensHalo
+    double mass_units = 14204545454.5455/1.13572841655696E-05;
+    LensHaloMassMap map("map.fits",zlens,mass_units,1,false,cosmo);
+    
+    double Sigma_crit = cosmo.SigmaCrit(zlens,zsource);
+    double Dl = cosmo.angDist(zlens);
+    double resolution_in_mpc = map.getRangeMpc()/map.getNx();
+    
+    // Print an image of the surface density of the LensHalo
+    PixelMap image = map.map_variables(KAPPA,1000,1000,resolution_in_mpc);
+    image *= 1/Sigma_crit;  // rescale to convergence
+    image.printFITS("!kappa_image.fits");
+    
+    // Print an image of the first component of the LensHalo
+    image = map.map_variables(ALPHA1,1000,1000,resolution_in_mpc);
+    image *= 1/Sigma_crit/Dl; // rescale to radians
+    image.printFITS("!alpha1_image.fits");
+    
+    // Print an image the photenital of the LensHalo
+    image = map.map_variables(PHI,1000,1000,resolution_in_mpc);
+    image *= 1/Sigma_crit/Dl/Dl; // rescale to radians^2
+    image.printFITS("!phi_image.fits");
+
+    // These output images are fine for a single plane lens
+    // but will not be valid for a multiplane lens.
+    
+    lens.moveinMainHalo(map, true);
+  }
+
   /** 
    Here a uniform grid is constructed that is not capable 
    of refinement for images, caustics, etc.  This is the 
@@ -76,6 +108,8 @@ int main(int arg,char **argv){
    */
   grid.writeFits(center,grid.getInitNgrid(), grid.getInitRange()/grid.getInitNgrid() ,KAPPA,"!initgrid");
   grid.writeFits(center,grid.getInitNgrid(), grid.getInitRange()/grid.getInitNgrid() ,ALPHA,"!initgrid");
+  grid.writeFits(center,grid.getInitNgrid(), grid.getInitRange()/grid.getInitNgrid() ,ALPHA1,"!initgrid");
+  grid.writeFits(center,grid.getInitNgrid(), grid.getInitRange()/grid.getInitNgrid() ,ALPHA2,"!initgrid");
   grid.writeFits(center,grid.getInitNgrid(), grid.getInitRange()/grid.getInitNgrid() ,GAMMA,"!initgrid");
   
   /******************************************
@@ -86,7 +120,7 @@ int main(int arg,char **argv){
   std::vector<ImageFinding::CriticalCurve> critcurves(100);
   int Ncrit;  // number of caustics
   // resolution to which the critical curves should be refined (radians)
-  PosType resolution = 0.05*pi/180/60/60;
+  PosType resolution = 0.05*PI/180/60/60;
   
   std::cout << "Looking for critical curves ..." << std::endl;
   // Find all the critical curves
@@ -145,7 +179,7 @@ int main(int arg,char **argv){
     // These are just circular sources.
     //  More realistic sources can be mapped by construction a source
     //  and using ImageFinding::map_imagesISOP().
-    ImageFinding::find_images_kist(&lens,ys[0].x,1.1*pi/180/60/60
+    ImageFinding::find_images_kist(&lens,ys[0].x,1.1*PI/180/60/60
                     ,&grid,&Nimages,imageinfo,&Nimagepoints,
                             0, true, 2);
     
