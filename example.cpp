@@ -15,13 +15,13 @@ int main(int arg,char **argv){
    A default name is used or a name is taken as a command line argument
    *********************/
 
-  std::string paramfile;
-  std::cout << "initializing model" << std::endl;
-  //string paramfile;
-  if(arg > 1) paramfile.assign(argv[1],strlen(argv[1]));
-  else paramfile = "sample_paramfile";
-  std::cout << "using parameter file: " << paramfile << std::endl;
-  
+//  std::string paramfile;
+//  std::cout << "initializing model" << std::endl;
+//  //string paramfile;
+//  if(arg > 1) paramfile.assign(argv[1],strlen(argv[1]));
+//  else paramfile = "sample_paramfile";
+//  std::cout << "using parameter file: " << paramfile << std::endl;
+//
   // read parameter file
   //InputParams params(paramfile);
 
@@ -44,7 +44,8 @@ int main(int arg,char **argv){
   {
     // make a mass map LensHalo
     double mass_units = 14204545454.5455/1.13572841655696E-05;
-    LensHaloMassMap map("map.fits",zlens,mass_units,1,false,cosmo);
+    //LensHaloMassMap map("map.fits",,zlens,mass_units,1,false,cosmo);
+    LensHaloMassMap map("map.fits",pix_map, 1, true, cosmo);
     
     double Sigma_crit = cosmo.SigmaCrit(zlens,zsource);
     double Dl = cosmo.angDist(zlens);
