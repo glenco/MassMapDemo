@@ -26,7 +26,7 @@ int main(int arg,char **argv){
   //InputParams params(paramfile);
 
   long seed = -1827674;
-  COSMOLOGY cosmo(Planck18);
+  COSMOLOGY cosmo(CosmoParamSet::Planck18);
   std::cout << "Lens constructed" << std::endl;
   
   //double center[] = {0.3*pi/180,-0.25*pi/180};
@@ -45,24 +45,24 @@ int main(int arg,char **argv){
     // make a mass map LensHalo
     double mass_units = 14204545454.5455/1.13572841655696E-05;
     //LensHaloMassMap map("map.fits",,zlens,mass_units,1,false,cosmo);
-    LensHaloMassMap map("map.fits",pix_map, 1, true, cosmo);
+    LensHaloMassMap map("map.fits",PixelMapType::pix_map, 1, true, cosmo);
     
     double Sigma_crit = cosmo.SigmaCrit(zlens,zsource);
     double Dl = cosmo.angDist(zlens);
     double resolution_in_mpc = map.getRangeMpc()/map.getNx();
     
     // Print an image of the surface density of the LensHalo
-    PixelMap image = map.map_variables(KAPPA,1000,1000,resolution_in_mpc);
+    PixelMap image = map.map_variables(LensingVariable::KAPPA,1000,1000,resolution_in_mpc);
     image *= 1/Sigma_crit;  // rescale to convergence
     image.printFITS("!kappa_image.fits");
     
     // Print an image of the first component of the LensHalo
-    image = map.map_variables(ALPHA1,1000,1000,resolution_in_mpc);
+    image = map.map_variables(LensingVariable::ALPHA1,1000,1000,resolution_in_mpc);
     image *= 1/Sigma_crit/Dl; // rescale to radians
     image.printFITS("!alpha1_image.fits");
     
     // Print an image the photenital of the LensHalo
-    image = map.map_variables(PHI,1000,1000,resolution_in_mpc);
+    image = map.map_variables(LensingVariable::PHI,1000,1000,resolution_in_mpc);
     image *= 1/Sigma_crit/Dl/Dl; // rescale to radians^2
     image.printFITS("!phi_image.fits");
 
@@ -91,7 +91,7 @@ int main(int arg,char **argv){
      in this case they are set to match.
      ****/
     gridmap.writeFitsUniform(center,gridmap.getInitNgrid()
-                           ,gridmap.getInitNgrid(),KAPPA,"!gridmap");
+                           ,gridmap.getInitNgrid(),LensingVariable::KAPPA,"!gridmap");
 
   }
   /****************************
@@ -107,11 +107,16 @@ int main(int arg,char **argv){
    This could be done with GridMap since no refinement has been done yet.
    The "!" infront of the file name causes it to overwrite a file with that name.  Suffixes are added (eg .kappa.fits).
    */
-  grid.writeFits(center,grid.getInitNgrid(), grid.getInitRange()/grid.getInitNgrid() ,KAPPA,"!initgrid");
-  grid.writeFits(center,grid.getInitNgrid(), grid.getInitRange()/grid.getInitNgrid() ,ALPHA,"!initgrid");
-  grid.writeFits(center,grid.getInitNgrid(), grid.getInitRange()/grid.getInitNgrid() ,ALPHA1,"!initgrid");
-  grid.writeFits(center,grid.getInitNgrid(), grid.getInitRange()/grid.getInitNgrid() ,ALPHA2,"!initgrid");
-  grid.writeFits(center,grid.getInitNgrid(), grid.getInitRange()/grid.getInitNgrid() ,GAMMA,"!initgrid");
+  grid.writeFits(center,grid.getInitNgrid(), grid.getInitRange()/grid.getInitNgrid()
+                 ,LensingVariable::KAPPA,"!initgrid");
+  grid.writeFits(center,grid.getInitNgrid(), grid.getInitRange()/grid.getInitNgrid()
+                 ,LensingVariable::ALPHA,"!initgrid");
+  grid.writeFits(center,grid.getInitNgrid(), grid.getInitRange()/grid.getInitNgrid()
+                 ,LensingVariable::ALPHA1,"!initgrid");
+  grid.writeFits(center,grid.getInitNgrid(), grid.getInitRange()/grid.getInitNgrid()
+                 ,LensingVariable::ALPHA2,"!initgrid");
+  grid.writeFits(center,grid.getInitNgrid(), grid.getInitRange()/grid.getInitNgrid()
+                 ,LensingVariable::GAMMA,"!initgrid");
   
   /******************************************
    Now we are going to look for same caustics
@@ -194,8 +199,9 @@ int main(int arg,char **argv){
   
   // If the grid is now output at twice the original resolution
   // some additional structure might be see because of the refinement
-  grid.writeFits(center,2*grid.getInitNgrid(),grid.getInitRange()/grid.getInitNgrid()/2, INVMAG,"!initgrid_refined");
-  grid.writeFits(center,2*grid.getInitNgrid(),grid.getInitRange()/grid.getInitNgrid()/2, KAPPA,"!initgrid_refined");
+  grid.writeFits(center,2*grid.getInitNgrid(),grid.getInitRange()/grid.getInitNgrid()/2,
+                 LensingVariable::INVMAG,"!initgrid_refined");
+  grid.writeFits(center,2*grid.getInitNgrid(),grid.getInitRange()/grid.getInitNgrid()/2, LensingVariable::KAPPA,"!initgrid_refined");
   
   
   /*************************************************************
