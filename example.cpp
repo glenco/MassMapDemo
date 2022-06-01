@@ -156,7 +156,7 @@ int main(int arg,char **argv){
     
     // this draws the critical curves on the image
     for(int ii = 0;ii< Ncrit;++ii){
-      map.AddCurve(critcurves[ii].critical_curve,ii+1);
+      map.AddCurve(critcurves[ii].critcurve,ii+1);
     }
     
     /**************************
